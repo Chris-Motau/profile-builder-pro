@@ -3,7 +3,7 @@ import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY ?? "",
+  apiKey: import.meta.env["VITE_FIREBASE_API_KEY"] ?? "",
   authDomain: "c-motau-profile.firebaseapp.com",
   projectId: "c-motau-profile",
   storageBucket: "c-motau-profile.firebasestorage.app",
