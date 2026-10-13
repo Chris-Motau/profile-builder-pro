@@ -13,7 +13,9 @@ const firebaseConfig = {
 
 export const firebaseReady = Boolean(firebaseConfig.apiKey);
 
-const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+export const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 
-export const db = getFirestore(app);
+export const db = getFirestore(app, "myprofilewebapp");
 export const storage = getStorage(app);
+storage.maxUploadRetryTime = 60_000;
+storage.maxOperationRetryTime = 30_000;

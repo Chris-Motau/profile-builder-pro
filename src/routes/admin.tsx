@@ -8,6 +8,7 @@ import { ProfessionalSkillsSection } from "@/components/admin/ProfessionalSkills
 import { ProjectsSection } from "@/components/admin/ProjectsSection";
 import { ExperienceSection } from "@/components/admin/ExperienceSection";
 import { ProfileExtrasSection } from "@/components/admin/ProfileExtrasSection";
+import { AdminGate } from "@/components/admin/AdminGate";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({
@@ -45,13 +46,15 @@ function AdminDashboard() {
             Firebase API key missing. Set VITE_FIREBASE_API_KEY to enable saving.
           </p>
         )}
-        <BioSection />
-        <EducationSection />
-        <TechnicalSkillsSection />
-        <ProfessionalSkillsSection />
-        <ProjectsSection />
-        <ExperienceSection />
-        <ProfileExtrasSection />
+        <AdminGate>
+          <BioSection />
+          <EducationSection />
+          <TechnicalSkillsSection />
+          <ProfessionalSkillsSection />
+          <ProjectsSection />
+          <ExperienceSection />
+          <ProfileExtrasSection />
+        </AdminGate>
       </main>
     </div>
   );

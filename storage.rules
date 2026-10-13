@@ -1,0 +1,34 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Storage cannot read admin documents from a named Firestore database.
+    function isAdmin() {
+      return request.auth != null &&
+        request.auth.uid == 'ZwGawphbH5V40dD9YabQBNU4Si72';
+    }
+
+    match /project-media/{fileName} {
+      allow get: if true;
+      allow create, update: if isAdmin() && request.resource.size <= 250 * 1024 * 1024;
+      allow delete: if isAdmin();
+    }
+
+    match /profile-picture/{fileName} {
+      allow get: if true;
+      allow create, update: if isAdmin() &&
+        request.resource.size <= 10 * 1024 * 1024 &&
+        request.resource.contentType.matches('image/(jpeg|png|webp|gif|avif)');
+      allow delete: if isAdmin();
+    }
+
+    match /{folder}/{fileName} {
+      allow get: if folder in ['cv', 'certificates', 'experience-certifications', 'case-studies'];
+      allow create, update: if folder in ['cv', 'certificates', 'experience-certifications', 'case-studies'] &&
+        isAdmin() && request.resource.size <= 25 * 1024 * 1024;
+      allow delete: if folder in ['cv', 'certificates', 'experience-certifications', 'case-studies'] && isAdmin();
+    }
+
+    // Listing and all other paths are denied.
+  }
+}

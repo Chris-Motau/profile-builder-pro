@@ -10,7 +10,7 @@ import {
   query,
   orderBy,
 } from "firebase/firestore";
-import { ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
+import { ref, uploadBytesResumable, getDownloadURL, deleteObject } from "firebase/storage";
 import { db, storage, firebaseReady } from "./firebase";
 
 export type WithId<T> = T & { id: string };
@@ -107,10 +107,22 @@ export type UploadedFile = {
   type: string;
 };
 
-export async function uploadFile(folder: string, file: File): Promise<UploadedFile> {
+export async function uploadFile(
+  folder: string,
+  file: File,
+  onProgress?: (bytesTransferred: number) => void,
+): Promise<UploadedFile> {
   const path = `${folder}/${Date.now()}-${file.name}`;
   const storageRef = ref(storage, path);
-  await uploadBytes(storageRef, file);
+  const task = uploadBytesResumable(storageRef, file);
+  const unsubscribe = task.on("state_changed", (snapshot) => {
+    onProgress?.(snapshot.bytesTransferred);
+  });
+  try {
+    await task;
+  } finally {
+    unsubscribe();
+  }
   const url = await getDownloadURL(storageRef);
   return { name: file.name, url, path, type: file.type };
 }

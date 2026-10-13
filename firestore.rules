@@ -1,0 +1,43 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Only this Firebase Authentication account can change profile content.
+    function isAdmin() {
+      return request.auth != null &&
+        request.auth.uid == 'ZwGawphbH5V40dD9YabQBNU4Si72';
+    }
+
+    match /profile/{documentId} {
+      allow read: if documentId in ['main', 'extras'];
+      allow create, update, delete: if documentId in ['main', 'extras'] && isAdmin();
+    }
+
+    match /education/{documentId} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /technicalSkills/{documentId} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /professionalSkills/{documentId} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /projects/{documentId} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /experience/{documentId} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    // No other client access is granted.
+  }
+}

@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useRef } from "react";
 import {
   GraduationCap,
   Briefcase,
@@ -15,12 +16,21 @@ import {
   FileText,
   ExternalLink,
   Download,
+  ChevronDown,
 } from "lucide-react";
 import { firebaseReady } from "@/lib/firebase";
 import { useCollectionData, useDocData, type UploadedFile } from "@/lib/admin-data";
+import { useTechnicalSkills } from "@/lib/technical-skills";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
-type Bio = { fullName: string; headline: string; bio: string };
+type Bio = { fullName: string; headline: string; bio: string; profilePicture?: UploadedFile | null };
 type Extras = {
   cv: UploadedFile | null;
   linkedin: string;
@@ -40,7 +50,6 @@ type Education = {
   modules: string[];
   certificates: UploadedFile[];
 };
-type SkillCategory = { category: string; skills: string[] };
 type ProSkill = { header: string; summary: string };
 type CaseStudy = { title: string; content: string; documents: UploadedFile[] };
 type Project = {
@@ -119,10 +128,11 @@ function Section({
 }
 
 function PublicProfile() {
+  const navigatedFromMenu = useRef(false);
   const bio = useDocData<Bio>("profile", "main", emptyBio);
   const extras = useDocData<Extras>("profile", "extras", emptyExtras);
   const education = useCollectionData<Education>("education");
-  const techSkills = useCollectionData<SkillCategory>("technicalSkills");
+  const techSkills = useTechnicalSkills();
   const proSkills = useCollectionData<ProSkill>("professionalSkills");
   const projects = useCollectionData<Project>("projects");
   const experience = useCollectionData<Experience>("experience");
@@ -131,22 +141,68 @@ function PublicProfile() {
   const hasContact = extras.data.email || extras.data.phone || extras.data.whatsapp;
   const hasSocial =
     extras.data.linkedin || extras.data.github || extras.data.tiktok || extras.data.otherLinks.length > 0;
+  const quickLinks = [
+    { id: "about", label: "About" },
+    ...(experience.items.length ? [{ id: "experience", label: "Experience" }] : []),
+    ...(education.items.length ? [{ id: "education", label: "Education" }] : []),
+    ...(techSkills.items.length ? [{ id: "technical-skills", label: "Technical skills" }] : []),
+    ...(proSkills.items.length ? [{ id: "professional-skills", label: "Professional skills" }] : []),
+    ...(projects.items.length ? [{ id: "projects", label: "Projects" }] : []),
+    ...(hasContact || hasSocial ? [{ id: "contact", label: "Contact" }] : []),
+  ];
 
   return (
     <div className="min-h-screen bg-background">
       {/* Hero */}
-      <header className="border-b border-border bg-muted/30">
-        <div className="mx-auto max-w-4xl px-4 py-16 sm:px-6 sm:py-24">
+      <header id="top" className="border-b border-border bg-muted/30">
+        <div className="border-b border-border bg-background/90">
+          <div className="mx-auto flex max-w-4xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
+            <a href="#top" className="font-semibold tracking-tight hover:text-primary">{name}</a>
+            <nav aria-label="Header navigation">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" aria-label="Open quick navigation">
+                    Quick navigation <ChevronDown className="size-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  align="end"
+                  className="min-w-48"
+                  onCloseAutoFocus={(event) => {
+                    if (navigatedFromMenu.current) event.preventDefault();
+                    navigatedFromMenu.current = false;
+                  }}
+                >
+                  {quickLinks.map((link) => (
+                    <DropdownMenuItem key={link.id} asChild onSelect={() => { navigatedFromMenu.current = true; }}>
+                      <a href={`#${link.id}`}>{link.label}</a>
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </nav>
+          </div>
+        </div>
+        <div className="profile-cover">
+          <div className="profile-cover-orb" aria-hidden="true" />
+          <div id="about" className="relative z-10 mx-auto max-w-4xl scroll-mt-24 px-4 py-16 sm:px-6 sm:py-24">
           {bio.loading ? (
-            <p className="text-muted-foreground">Loading…</p>
+            <p className="text-white/80">Loading…</p>
           ) : (
             <>
-              <p className="text-sm font-medium uppercase tracking-widest text-primary">
+              {bio.data.profilePicture?.url && (
+                <img
+                  src={bio.data.profilePicture.url}
+                  alt={`${name}'s profile picture`}
+                  className="mb-6 size-32 rounded-full border-4 border-white/70 object-cover shadow-xl shadow-black/20"
+                />
+              )}
+              <p className="text-sm font-medium uppercase tracking-widest text-teal-200">
                 {bio.data.headline || "Profile"}
               </p>
               <h1 className="mt-3 text-4xl font-extrabold tracking-tight sm:text-5xl">{name}</h1>
               {bio.data.bio && (
-                <p className="mt-6 max-w-2xl whitespace-pre-wrap text-lg leading-relaxed text-muted-foreground">
+                <p className="mt-6 max-w-2xl whitespace-pre-wrap text-lg leading-relaxed text-white/80">
                   {bio.data.bio}
                 </p>
               )}
@@ -156,7 +212,7 @@ function PublicProfile() {
                     href={extras.data.cv.url}
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90"
+                    className="inline-flex items-center gap-2 rounded-lg bg-white px-4 py-2 text-sm font-medium text-slate-900 transition-colors hover:bg-teal-100"
                   >
                     <Download className="size-4" /> Download CV
                   </a>
@@ -176,6 +232,7 @@ function PublicProfile() {
               </div>
             </>
           )}
+          </div>
         </div>
       </header>
 
@@ -303,9 +360,14 @@ function PublicProfile() {
         {/* Projects */}
         {projects.items.length > 0 && (
           <Section id="projects" icon={FolderKanban} title="Featured projects">
-            <div className="grid gap-6">
+            <div
+              className="flex snap-x snap-proximity gap-6 overflow-x-auto overscroll-x-contain pb-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              role="region"
+              aria-label="Featured projects, scroll horizontally to see more"
+              tabIndex={0}
+            >
               {projects.items.map((p) => (
-                <article key={p.id} className="rounded-xl border border-border p-6">
+                <article key={p.id} className="w-[85%] min-w-0 shrink-0 snap-start rounded-xl border border-border p-6 md:w-[calc((100%-1.5rem)/2)] [overflow-wrap:anywhere]">
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <h3 className="text-lg font-semibold">{p.title}</h3>
                     {p.link && (
@@ -424,8 +486,26 @@ function PublicProfile() {
         )}
       </main>
 
-      <footer className="border-t border-border py-8">
-        <div className="mx-auto flex max-w-4xl items-center justify-between px-4 sm:px-6">
+      <footer className="border-t border-border bg-muted/30 py-10">
+        <div className="mx-auto grid max-w-4xl gap-8 px-4 sm:grid-cols-2 sm:px-6">
+          <div className="space-y-3">
+            <a href="#top" className="text-lg font-semibold tracking-tight hover:text-primary">{name}</a>
+            <p className="max-w-sm text-sm text-muted-foreground">{bio.data.headline || "Profile and portfolio"}</p>
+          </div>
+          <nav aria-label="Footer quick navigation">
+            <h2 className="mb-3 text-sm font-semibold">Quick navigation</h2>
+            <ul className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm sm:grid-cols-3">
+              {quickLinks.map((link) => (
+                <li key={link.id}>
+                  <a href={`#${link.id}`} className="text-muted-foreground hover:text-primary hover:underline">
+                    {link.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </nav>
+        </div>
+        <div className="mx-auto mt-8 flex max-w-4xl items-center justify-between gap-4 border-t border-border px-4 pt-6 sm:px-6">
           <p className="text-sm text-muted-foreground">© {new Date().getFullYear()} {name}</p>
           <Link to="/admin" className="text-xs text-muted-foreground hover:underline">
             Admin
@@ -450,7 +530,7 @@ function SocialLink({
       href={href}
       target="_blank"
       rel="noreferrer"
-      className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm transition-colors hover:bg-muted"
+      className="inline-flex items-center gap-2 rounded-lg border border-white/30 px-3 py-2 text-sm text-white transition-colors hover:bg-white/10"
     >
       <Icon className="size-4" /> {label}
     </a>
