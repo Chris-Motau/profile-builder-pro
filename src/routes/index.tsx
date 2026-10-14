@@ -17,6 +17,7 @@ import {
   ExternalLink,
   Download,
   ChevronDown,
+  Award,
 } from "lucide-react";
 import { firebaseReady } from "@/lib/firebase";
 import { useCollectionData, useDocData, type UploadedFile } from "@/lib/admin-data";
