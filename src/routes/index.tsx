@@ -237,26 +237,6 @@ function PublicProfile() {
       </header>
 
       <main className="mx-auto max-w-4xl space-y-16 px-4 py-12 sm:px-6">
-        <nav aria-label="Quick navigation" className="rounded-xl border border-border bg-card p-4">
-          <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Quick navigation</p>
-          <div className="flex flex-wrap gap-2">
-            {[
-              ["Experience", "#experience"],
-              ["Education", "#education"],
-              ["Technical skills", "#technical-skills"],
-              ["Professional skills", "#professional-skills"],
-              ["Projects", "#projects"],
-              ["Contact", "#contact"],
-            ].map(([label, href]) => (
-              <a key={href} href={href} className="rounded-full border border-border px-3 py-1.5 text-sm transition-colors hover:bg-muted">
-                {label}
-              </a>
-            ))}
-            <Link to="/certificates" className="inline-flex items-center gap-1.5 rounded-full bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90">
-              <Award className="size-4" /> See all certificates
-            </Link>
-          </div>
-        </nav>
 
         {!firebaseReady && (
           <p className="rounded-xl border border-border bg-muted p-4 text-sm text-muted-foreground">
@@ -586,3 +566,4 @@ function ContactCard({
     </a>
   );
 }
+
