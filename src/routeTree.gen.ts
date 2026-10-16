@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminRouteImport } from './routes/admin'
+import { Route as AdminPreviewRouteImport } from './routes/admin-preview'
 import { Route as CertificatesRouteImport } from './routes/certificates'
 
 const IndexRoute = IndexRouteImport.update({
@@ -23,6 +24,11 @@ const AdminRoute = AdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminPreviewRoute = AdminPreviewRouteImport.update({
+  id: '/admin-preview',
+  path: '/admin-preview',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CertificatesRoute = CertificatesRouteImport.update({
   id: '/certificates',
   path: '/certificates',
@@ -32,30 +38,34 @@ const CertificatesRoute = CertificatesRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/admin-preview': typeof AdminPreviewRoute
   '/certificates': typeof CertificatesRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/admin-preview': typeof AdminPreviewRoute
   '/certificates': typeof CertificatesRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/admin-preview': typeof AdminPreviewRoute
   '/certificates': typeof CertificatesRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/admin' | '/certificates'
+  fullPaths: '/' | '/admin' | '/admin-preview' | '/certificates'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/admin' | '/certificates'
-  id: '__root__' | '/' | '/admin' | '/certificates'
+  to: '/' | '/admin' | '/admin-preview' | '/certificates'
+  id: '__root__' | '/' | '/admin' | '/admin-preview' | '/certificates'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRoute
+  AdminPreviewRoute: typeof AdminPreviewRoute
   CertificatesRoute: typeof CertificatesRoute
 }
 
@@ -75,6 +85,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin-preview': {
+      id: '/admin-preview'
+      path: '/admin-preview'
+      fullPath: '/admin-preview'
+      preLoaderRoute: typeof AdminPreviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/certificates': {
       id: '/certificates'
       path: '/certificates'
@@ -88,6 +105,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRoute,
+  AdminPreviewRoute: AdminPreviewRoute,
   CertificatesRoute: CertificatesRoute,
 }
 export const routeTree = rootRouteImport

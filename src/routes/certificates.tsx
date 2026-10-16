@@ -26,6 +26,16 @@ function isPdf(file: UploadedFile) {
   return file.type?.toLowerCase() === "application/pdf" || file.name.toLowerCase().endsWith(".pdf");
 }
 
+function getDownloadUrl(file: UploadedFile) {
+  const url = new URL(file.url);
+  const fallbackName = file.name.replace(/[^\x20-\x7E]|["\\]/g, "_");
+  url.searchParams.set(
+    "response-content-disposition",
+    `attachment; filename="${fallbackName}"; filename*=UTF-8''${encodeURIComponent(file.name)}`,
+  );
+  return url.toString();
+}
+
 function CertificatesPage() {
   const extras = useDocData<Extras>("profile", "extras", emptyExtras);
   const education = useCollectionData<Education>("education");
@@ -97,7 +107,7 @@ function CertificatesPage() {
                   <a href={file.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-2 text-sm hover:bg-muted">
                     <ExternalLink className="size-4" /> View
                   </a>
-                  <a href={file.url} download={file.name} className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:opacity-90">
+                  <a href={getDownloadUrl(file)} download={file.name} className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:opacity-90">
                     <Download className="size-4" /> Download
                   </a>
                 </div>

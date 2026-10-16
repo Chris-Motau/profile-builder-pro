@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { LayoutDashboard } from "lucide-react";
 import { firebaseReady } from "@/lib/firebase";
 import { BioSection } from "@/components/admin/BioSection";
@@ -29,14 +29,19 @@ function AdminDashboard() {
   return (
     <div className="min-h-screen bg-muted/40">
       <header className="sticky top-0 z-10 border-b border-border bg-background/80 backdrop-blur">
-        <div className="mx-auto flex max-w-5xl items-center gap-3 px-4 py-4 sm:px-6">
-          <span className="flex size-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-            <LayoutDashboard className="size-5" />
-          </span>
-          <div>
-            <h1 className="text-lg font-semibold tracking-tight">Admin dashboard</h1>
-            <p className="text-xs text-muted-foreground">Manage everything shown on your profile</p>
+        <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 py-4 sm:px-6">
+          <div className="flex items-center gap-3">
+            <span className="flex size-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+              <LayoutDashboard className="size-5" />
+            </span>
+            <div>
+              <h1 className="text-lg font-semibold tracking-tight">Admin dashboard</h1>
+              <p className="text-xs text-muted-foreground">Manage everything shown on your profile</p>
+            </div>
           </div>
+          <Link to="/admin-preview" className="text-sm text-muted-foreground hover:text-foreground">
+            Preview dashboard
+          </Link>
         </div>
       </header>
 

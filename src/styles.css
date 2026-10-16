@@ -189,6 +189,49 @@
   animation: cover-float 14s ease-in-out infinite alternate;
 }
 
+.profile-word {
+  display: inline-block;
+  margin-inline-end: 0.25em;
+  opacity: 0;
+  animation: profile-word-reveal 650ms cubic-bezier(0.2, 0.75, 0.25, 1) forwards;
+}
+
+.profile-word:nth-child(2) { animation-delay: 80ms; }
+.profile-word:nth-child(3) { animation-delay: 160ms; }
+.profile-word:nth-child(4) { animation-delay: 240ms; }
+.profile-word:nth-child(5) { animation-delay: 320ms; }
+.profile-word:nth-child(6) { animation-delay: 400ms; }
+.profile-word:nth-child(7) { animation-delay: 480ms; }
+.profile-word:nth-child(8) { animation-delay: 560ms; }
+
+.profile-bio-reveal {
+  animation: profile-bio-reveal 700ms ease-out 300ms both;
+}
+
+@keyframes profile-word-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(0.55em) rotateX(-18deg);
+    filter: blur(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) rotateX(0);
+    filter: blur(0);
+  }
+}
+
+@keyframes profile-bio-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(0.75rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 @keyframes cover-drift {
   from { transform: translate3d(-3%, 2%, 0) scale(1); }
   to { transform: translate3d(3%, -2%, 0) scale(1.08); }
@@ -201,7 +244,12 @@
 
 @media (prefers-reduced-motion: reduce) {
   .profile-cover::before,
-  .profile-cover-orb {
+  .profile-cover-orb,
+  .profile-word,
+  .profile-bio-reveal {
     animation: none;
+    opacity: 1;
+    filter: none;
+    transform: none;
   }
 }

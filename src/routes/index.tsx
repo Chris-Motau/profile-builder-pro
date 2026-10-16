@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   GraduationCap,
   Briefcase,
@@ -17,8 +17,12 @@ import {
   ExternalLink,
   Download,
   ChevronDown,
+  ChevronUp,
   Award,
+  Volume2,
+  VolumeX,
 } from "lucide-react";
+import { toast } from "sonner";
 import { firebaseReady } from "@/lib/firebase";
 import { useCollectionData, useDocData, type UploadedFile } from "@/lib/admin-data";
 import { useTechnicalSkills } from "@/lib/technical-skills";
@@ -108,27 +112,71 @@ function Section({
   icon: Icon,
   title,
   children,
+  speaker,
 }: {
   id: string;
   icon: React.ComponentType<{ className?: string }>;
   title: string;
   children: React.ReactNode;
+  speaker?: React.ReactNode;
 }) {
   return (
     <section id={id} className="scroll-mt-24">
-      <div className="mb-6 flex items-center gap-3">
-        <span className="flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
-          <Icon className="size-5" />
-        </span>
-        <h2 className="text-2xl font-bold tracking-tight">{title}</h2>
+      <div className="mb-6 flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <span className="flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+            <Icon className="size-5" />
+          </span>
+          <h2 className="text-2xl font-bold tracking-tight">{title}</h2>
+        </div>
+        {speaker}
       </div>
       {children}
     </section>
   );
 }
 
+function VoiceReaderButton({
+  section,
+  isSpeaking,
+  onClick,
+  className,
+}: {
+  section: string;
+  isSpeaking: boolean;
+  onClick: () => void;
+  className?: string;
+}) {
+  const label = isSpeaking ? `Stop reading ${section}` : `Read ${section} aloud`;
+
+  return (
+    <Button
+      type="button"
+      variant="outline"
+      size="icon"
+      className={className}
+      aria-label={label}
+      aria-pressed={isSpeaking}
+      title={label}
+      onClick={onClick}
+    >
+      {isSpeaking ? <VolumeX /> : <Volume2 />}
+    </Button>
+  );
+}
+
 function PublicProfile() {
   const navigatedFromMenu = useRef(false);
+  const activeUtterance = useRef<SpeechSynthesisUtterance | null>(null);
+  const [speakingSection, setSpeakingSection] = useState<string | null>(null);
+  const [expandedProjects, setExpandedProjects] = useState<Set<string>>(() => new Set());
+  useEffect(
+    () => () => {
+      activeUtterance.current = null;
+      if (typeof window !== "undefined") window.speechSynthesis?.cancel();
+    },
+    [],
+  );
   const bio = useDocData<Bio>("profile", "main", emptyBio);
   const extras = useDocData<Extras>("profile", "extras", emptyExtras);
   const education = useCollectionData<Education>("education");
@@ -150,6 +198,92 @@ function PublicProfile() {
     ...(projects.items.length ? [{ id: "projects", label: "Projects" }] : []),
     ...(hasContact || hasSocial ? [{ id: "contact", label: "Contact" }] : []),
   ];
+
+  const toggleSectionSpeech = (section: string, text: string) => {
+    if (
+      typeof window === "undefined" ||
+      !window.speechSynthesis ||
+      typeof SpeechSynthesisUtterance === "undefined"
+    ) {
+      toast.error("Text-to-speech is not available in this browser.");
+      return;
+    }
+
+    const speech = window.speechSynthesis;
+    if (speakingSection === section) {
+      activeUtterance.current = null;
+      speech.cancel();
+      setSpeakingSection(null);
+      return;
+    }
+
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.onend = () => {
+      if (activeUtterance.current === utterance) {
+        activeUtterance.current = null;
+        setSpeakingSection(null);
+      }
+    };
+    utterance.onerror = (event) => {
+      if (activeUtterance.current === utterance) {
+        activeUtterance.current = null;
+        setSpeakingSection(null);
+        if (event.error !== "canceled" && event.error !== "interrupted") {
+          toast.error("Unable to read this section aloud. Please try again.");
+        }
+      }
+    };
+
+    speech.cancel();
+    activeUtterance.current = utterance;
+    setSpeakingSection(section);
+    try {
+      speech.speak(utterance);
+    } catch {
+      activeUtterance.current = null;
+      setSpeakingSection(null);
+      toast.error("Unable to read this section aloud. Please try again.");
+    }
+  };
+
+  const experienceSpeechText = experience.items
+    .map((item) =>
+      [
+        item.position,
+        item.company,
+        [item.startDate && formatDate(item.startDate), item.endDate ? formatDate(item.endDate) : "Present"]
+          .filter(Boolean)
+          .join(" to "),
+        item.description,
+        ...(item.certifications ?? []).map((file) => file.name),
+      ]
+        .filter(Boolean)
+        .join(". "),
+    )
+    .join(". ");
+  const professionalSkillsSpeechText = proSkills.items
+    .map((item) => [item.header, item.summary].filter(Boolean).join(". "))
+    .join(". ");
+  const projectsSpeechText = projects.items
+    .map((project) =>
+      [
+        project.title,
+        project.problem && `Problem: ${project.problem}`,
+        project.solution && `Solution: ${project.solution}`,
+        project.technologies?.length && `Technologies: ${project.technologies.join(", ")}`,
+        ...(project.media ?? [])
+          .filter((file) => !file.type?.startsWith("image/") && !file.type?.startsWith("video/"))
+          .map((file) => file.name),
+        ...(project.caseStudies ?? []).flatMap((study) => [
+          study.title,
+          study.content,
+          ...(study.documents ?? []).map((file) => file.name),
+        ]),
+      ]
+        .filter(Boolean)
+        .join(". "),
+    )
+    .join(". ");
 
   return (
     <div className="min-h-screen bg-background">
@@ -178,6 +312,12 @@ function PublicProfile() {
                       <a href={`#${link.id}`}>{link.label}</a>
                     </DropdownMenuItem>
                   ))}
+                  <DropdownMenuItem asChild>
+                    <Link to="/certificates">See all certificates</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/admin-preview">Admin preview</Link>
+                  </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </nav>
@@ -190,6 +330,19 @@ function PublicProfile() {
             <p className="text-white/80">Loading…</p>
           ) : (
             <>
+              <div className="mb-5 flex justify-end">
+                <VoiceReaderButton
+                  section="bio"
+                  isSpeaking={speakingSection === "about"}
+                  onClick={() =>
+                    toggleSectionSpeech(
+                      "about",
+                      [name, bio.data.headline || "Profile", bio.data.bio].filter(Boolean).join(". "),
+                    )
+                  }
+                  className="border-white/40 bg-white/10 text-white hover:bg-white/20 hover:text-white"
+                />
+              </div>
               {bio.data.profilePicture?.url && (
                 <img
                   src={bio.data.profilePicture.url}
@@ -198,11 +351,24 @@ function PublicProfile() {
                 />
               )}
               <p className="text-sm font-medium uppercase tracking-widest text-teal-200">
-                {bio.data.headline || "Profile"}
+                {(bio.data.headline || "Profile").split(/\s+/).map((word, index) => (
+                  <span key={`${word}-${index}`} className="profile-word" aria-hidden="true">
+                    {word}
+                  </span>
+                ))}
               </p>
-              <h1 className="mt-3 text-4xl font-extrabold tracking-tight sm:text-5xl">{name}</h1>
+              <h1
+                className="mt-3 text-4xl font-extrabold tracking-tight sm:text-5xl"
+                aria-label={name}
+              >
+                {name.split(/\s+/).map((word, index) => (
+                  <span key={`${word}-${index}`} className="profile-word" aria-hidden="true">
+                    {word}
+                  </span>
+                ))}
+              </h1>
               {bio.data.bio && (
-                <p className="mt-6 max-w-2xl whitespace-pre-wrap text-lg leading-relaxed text-white/80">
+                <p className="profile-bio-reveal mt-6 max-w-2xl whitespace-pre-wrap text-lg leading-relaxed text-white/80">
                   {bio.data.bio}
                 </p>
               )}
@@ -246,7 +412,18 @@ function PublicProfile() {
 
         {/* Experience */}
         {experience.items.length > 0 && (
-          <Section id="experience" icon={Briefcase} title="Experience">
+          <Section
+            id="experience"
+            icon={Briefcase}
+            title="Experience"
+            speaker={
+              <VoiceReaderButton
+                section="experience"
+                isSpeaking={speakingSection === "experience"}
+                onClick={() => toggleSectionSpeech("experience", experienceSpeechText)}
+              />
+            }
+          >
             <div className="space-y-6">
               {experience.items.map((item) => (
                 <article key={item.id} className="relative border-l-2 border-border pl-6">
@@ -346,7 +523,18 @@ function PublicProfile() {
 
         {/* Professional skills */}
         {proSkills.items.length > 0 && (
-          <Section id="professional-skills" icon={HeartHandshake} title="Professional skills">
+          <Section
+            id="professional-skills"
+            icon={HeartHandshake}
+            title="Professional skills"
+            speaker={
+              <VoiceReaderButton
+                section="professional skills"
+                isSpeaking={speakingSection === "professional-skills"}
+                onClick={() => toggleSectionSpeech("professional-skills", professionalSkillsSpeechText)}
+              />
+            }
+          >
             <div className="grid gap-4 sm:grid-cols-2">
               {proSkills.items.map((item) => (
                 <article key={item.id} className="rounded-xl border border-border p-5">
@@ -360,7 +548,18 @@ function PublicProfile() {
 
         {/* Projects */}
         {projects.items.length > 0 && (
-          <Section id="projects" icon={FolderKanban} title="Featured projects">
+          <Section
+            id="projects"
+            icon={FolderKanban}
+            title="Featured projects"
+            speaker={
+              <VoiceReaderButton
+                section="featured projects"
+                isSpeaking={speakingSection === "projects"}
+                onClick={() => toggleSectionSpeech("projects", projectsSpeechText)}
+              />
+            }
+          >
             <div
               className="flex snap-x snap-proximity gap-6 overflow-x-auto overscroll-x-contain pb-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               role="region"
@@ -382,17 +581,48 @@ function PublicProfile() {
                       </a>
                     )}
                   </div>
-                  {p.problem && (
-                    <p className="mt-3 text-sm text-muted-foreground">
-                      <span className="font-medium text-foreground">Problem: </span>
-                      {p.problem}
-                    </p>
-                  )}
-                  {p.solution && (
-                    <p className="mt-2 text-sm text-muted-foreground">
-                      <span className="font-medium text-foreground">Solution: </span>
-                      {p.solution}
-                    </p>
+                  {(p.problem || p.solution) && (
+                    <div className="mt-3">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        className="h-auto px-0 py-1 text-primary hover:bg-transparent hover:underline"
+                        aria-expanded={expandedProjects.has(p.id)}
+                        aria-controls={`project-details-${p.id}`}
+                        onClick={() =>
+                          setExpandedProjects((current) => {
+                            const next = new Set(current);
+                            if (next.has(p.id)) next.delete(p.id);
+                            else next.add(p.id);
+                            return next;
+                          })
+                        }
+                      >
+                        {expandedProjects.has(p.id) ? (
+                          <>Hide details <ChevronUp /></>
+                        ) : (
+                          <>View more details <ChevronDown /></>
+                        )}
+                      </Button>
+                      <div
+                        id={`project-details-${p.id}`}
+                        className="mt-2"
+                        hidden={!expandedProjects.has(p.id)}
+                      >
+                        {p.problem && (
+                          <p className="text-sm text-muted-foreground">
+                            <span className="font-medium text-foreground">Problem: </span>
+                            {p.problem}
+                          </p>
+                        )}
+                        {p.solution && (
+                          <p className="mt-2 text-sm text-muted-foreground">
+                            <span className="font-medium text-foreground">Solution: </span>
+                            {p.solution}
+                          </p>
+                        )}
+                      </div>
+                    </div>
                   )}
                   {p.technologies?.length > 0 && (
                     <div className="mt-4 flex flex-wrap gap-2">
@@ -508,9 +738,11 @@ function PublicProfile() {
         </div>
         <div className="mx-auto mt-8 flex max-w-4xl items-center justify-between gap-4 border-t border-border px-4 pt-6 sm:px-6">
           <p className="text-sm text-muted-foreground">© {new Date().getFullYear()} {name}</p>
-          <Link to="/admin" className="text-xs text-muted-foreground hover:underline">
-            Admin
-          </Link>
+          <div className="flex gap-4">
+            <Link to="/admin-preview" className="text-xs text-muted-foreground hover:underline">
+              Admin preview
+            </Link>
+          </div>
         </div>
       </footer>
     </div>
@@ -566,4 +798,3 @@ function ContactCard({
     </a>
   );
 }
-
