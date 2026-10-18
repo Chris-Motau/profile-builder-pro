@@ -6,6 +6,7 @@ import {
   Code2,
   HeartHandshake,
   FolderKanban,
+  AppWindow,
   Mail,
   Phone,
   MessageCircle,
@@ -66,6 +67,7 @@ type Project = {
   media: UploadedFile[];
   caseStudies: CaseStudy[];
 };
+type AppEntry = { name: string; link: string };
 type Experience = {
   company: string;
   position: string;
@@ -183,6 +185,7 @@ function PublicProfile() {
   const techSkills = useTechnicalSkills();
   const proSkills = useCollectionData<ProSkill>("professionalSkills");
   const projects = useCollectionData<Project>("projects");
+  const apps = useCollectionData<AppEntry>("apps");
   const experience = useCollectionData<Experience>("experience");
 
   const name = bio.data.fullName || "C Motau";
@@ -196,6 +199,7 @@ function PublicProfile() {
     ...(techSkills.items.length ? [{ id: "technical-skills", label: "Technical skills" }] : []),
     ...(proSkills.items.length ? [{ id: "professional-skills", label: "Professional skills" }] : []),
     ...(projects.items.length ? [{ id: "projects", label: "Projects" }] : []),
+    ...(apps.items.length ? [{ id: "apps", label: "Apps" }] : []),
     ...(hasContact || hasSocial ? [{ id: "contact", label: "Contact" }] : []),
   ];
 
@@ -694,6 +698,32 @@ function PublicProfile() {
           </Section>
         )}
 
+        {apps.items.length > 0 && (
+          <Section id="apps" icon={AppWindow} title="My apps">
+            <div className="grid gap-4 sm:grid-cols-2">
+              {apps.items.map((app) => (
+                <article
+                  key={app.id}
+                  className="flex items-center justify-between gap-4 rounded-xl border border-border p-5"
+                >
+                  <div className="flex min-w-0 items-center gap-3">
+                    <AppIcon name={app.name} link={app.link} />
+                    <h3 className="truncate font-semibold">{app.name}</h3>
+                  </div>
+                  <a
+                    href={app.link}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex shrink-0 items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+                  >
+                    <Download className="size-4" /> Install
+                  </a>
+                </article>
+              ))}
+            </div>
+          </Section>
+        )}
+
         {/* Contact */}
         {(hasContact || hasSocial) && (
           <Section id="contact" icon={Mail} title="Contact">
@@ -746,6 +776,35 @@ function PublicProfile() {
         </div>
       </footer>
     </div>
+  );
+}
+
+function AppIcon({ name, link }: { name: string; link: string }) {
+  const [failed, setFailed] = useState(false);
+  let iconUrl: string | null = null;
+  try {
+    const url = new URL(link);
+    if (url.protocol === "https:" || url.protocol === "http:") {
+      iconUrl = new URL("/favicon.ico", url.origin).href;
+    }
+  } catch {
+    iconUrl = null;
+  }
+
+  return (
+    <span className="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-primary/10 text-primary">
+      {iconUrl && !failed ? (
+        <img
+          src={iconUrl}
+          alt=""
+          className="size-full object-cover"
+          onError={() => setFailed(true)}
+        />
+      ) : (
+        <AppWindow className="size-6" aria-hidden="true" />
+      )}
+      <span className="sr-only">{`${name} app icon`}</span>
+    </span>
   );
 }
 

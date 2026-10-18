@@ -6,6 +6,7 @@ import { EducationSection } from "@/components/admin/EducationSection";
 import { TechnicalSkillsSection } from "@/components/admin/TechnicalSkillsSection";
 import { ProfessionalSkillsSection } from "@/components/admin/ProfessionalSkillsSection";
 import { ProjectsSection } from "@/components/admin/ProjectsSection";
+import { AppsSection } from "@/components/admin/AppsSection";
 import { ExperienceSection } from "@/components/admin/ExperienceSection";
 import { ProfileExtrasSection } from "@/components/admin/ProfileExtrasSection";
 import { AdminGate } from "@/components/admin/AdminGate";
@@ -57,6 +58,7 @@ function AdminDashboard() {
           <TechnicalSkillsSection />
           <ProfessionalSkillsSection />
           <ProjectsSection />
+          <AppsSection />
           <ExperienceSection />
           <ProfileExtrasSection />
         </AdminGate>

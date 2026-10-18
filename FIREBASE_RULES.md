@@ -7,7 +7,7 @@ This project uses the Firebase project `c-motau-profile` and its named Firestore
 1. In Firebase Console, enable **Email/Password** under **Authentication → Sign-in method**. Create an email/password user under **Authentication → Users**.
 2. Copy that user's UID from **Authentication → Users**. The `/admin` page also shows the UID when another account signs in.
 3. The UID is already set in both `firestore.rules` and `storage.rules`. If the admin account changes, update both files.
-4. The local `.env.local` already sets `VITE_FIREBASE_ADMIN_UID`. Set the same variable in the production build environment. Restart the dev server or rebuild after changing it.
+4. Set `VITE_FIREBASE_ADMIN_UID` in `.env.local` to the same UID. Set the variable in the production build environment too. Restart the dev server or rebuild after changing it.
 5. Sign in at `/admin` with the same account. There is no public sign-up flow.
 
 The UID is an identifier, not a password. The rules verify the signed-in Firebase Authentication token; changing the browser's `VITE_FIREBASE_ADMIN_UID` value cannot grant access.
@@ -27,6 +27,6 @@ npx -y firebase-tools@latest deploy --project c-motau-profile --only firestore:r
 
 The Firestore configuration in `firebase.json` targets `myprofilewebapp`. Storage rules cannot read Firestore documents from a named database, so both rule files use the same admin UID directly.
 
-The Storage rules allow public downloads only from the six upload folders used by the app. They limit documents to 25 MiB, project media to 250 MiB, and profile pictures to 10 MiB with image MIME types. They deny listing the bucket. The Firestore rules allow public reads only from the profile documents and five published collections used by the home page. All other client access is denied.
+The Storage rules allow public downloads only from the six upload folders used by the app. They limit documents to 25 MiB, project media to 250 MiB, and profile pictures to 10 MiB with image MIME types. They deny listing the bucket. The Firestore rules allow public reads only from the profile documents and six published collections used by the home page (including apps). All other client access is denied.
 
 Deploying these rules replaces the project's current rules for the named Firestore database and Storage. Verify that the configured UID matches the intended account before deploying.
