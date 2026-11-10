@@ -704,20 +704,25 @@ function PublicProfile() {
               {apps.items.map((app) => (
                 <article
                   key={app.id}
-                  className="flex items-center justify-between gap-4 rounded-xl border border-border p-5"
+                  className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-lg border border-border p-3 sm:gap-4 sm:rounded-xl sm:p-5"
                 >
-                  <div className="flex min-w-0 items-center gap-3">
+                  <div className="flex min-w-0 items-center gap-2 sm:gap-3">
                     <AppIcon name={app.name} link={app.link} />
-                    <h3 className="truncate font-semibold">{app.name}</h3>
+                    <h3 className="min-w-0 truncate text-sm font-semibold sm:text-base">{app.name}</h3>
                   </div>
-                  <a
+                  <Button
+                    asChild
+                    size="sm"
+                    className="h-9 shrink-0 px-3 sm:px-4"
+                  >
+                    <a
                     href={app.link}
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex shrink-0 items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-                  >
-                    <Download className="size-4" /> Install
-                  </a>
+                    >
+                      <Download className="size-4" /> Install
+                    </a>
+                  </Button>
                 </article>
               ))}
             </div>
@@ -792,7 +797,7 @@ function AppIcon({ name, link }: { name: string; link: string }) {
   }
 
   return (
-    <span className="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-primary/10 text-primary">
+    <span className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-primary/10 text-primary sm:size-12 sm:rounded-xl">
       {iconUrl && !failed ? (
         <img
           src={iconUrl}
@@ -801,7 +806,7 @@ function AppIcon({ name, link }: { name: string; link: string }) {
           onError={() => setFailed(true)}
         />
       ) : (
-        <AppWindow className="size-6" aria-hidden="true" />
+        <AppWindow className="size-5 sm:size-6" aria-hidden="true" />
       )}
       <span className="sr-only">{`${name} app icon`}</span>
     </span>
