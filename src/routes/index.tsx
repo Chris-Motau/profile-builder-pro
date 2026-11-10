@@ -36,6 +36,14 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
+declare global {
+  interface Window {
+    __lovableEvents?: {
+      track?: (event: string, properties?: Record<string, unknown>) => string | null;
+    };
+  }
+}
+
 type Bio = { fullName: string; headline: string; bio: string; profilePicture?: UploadedFile | null };
 type Extras = {
   cv: UploadedFile | null;
@@ -382,6 +390,7 @@ function PublicProfile() {
                     href={extras.data.cv.url}
                     target="_blank"
                     rel="noreferrer"
+                    onClick={() => window.__lovableEvents?.track?.("project.cv_downloaded")}
                     className="inline-flex items-center gap-2 rounded-lg bg-white px-4 py-2 text-sm font-medium text-slate-900 transition-colors hover:bg-teal-100"
                   >
                     <Download className="size-4" /> Download CV
