@@ -10,7 +10,7 @@
     "preview": "vite preview",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "functions:serve": "firebase emulators:start --only functions",
+    "functions:serve": "firebase emulators:start --only functions,firestore",
     "functions:deploy": "firebase deploy --only functions:chatgptAdminMcp"
   },
   "overrides": {

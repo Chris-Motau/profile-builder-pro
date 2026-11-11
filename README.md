@@ -43,7 +43,7 @@ Deploy the function:
 firebase deploy --only functions:chatgptAdminMcp
 ```
 
-You can run the local Functions emulator with `npm run functions:serve` from the repository root. The root `npm run build` and `npm run dev` commands continue to target the web app.
+You can run the local Functions and Firestore emulators together with `npm run functions:serve` from the repository root, so emulator writes stay local. The root `npm run build` and `npm run dev` commands continue to target the web app.
 
 Expected endpoint (region is explicitly `us-central1`):
 

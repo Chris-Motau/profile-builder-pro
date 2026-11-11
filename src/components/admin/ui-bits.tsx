@@ -94,6 +94,7 @@ export function UploadButton({
     <div>
       <input
         id={inputId}
+        name={inputId}
         type="file"
         accept={accept}
         multiple={multiple}
