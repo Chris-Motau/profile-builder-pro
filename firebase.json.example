@@ -10,7 +10,45 @@
     "public": ".output/public",
     "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
     "redirects": [{ "source": "/favicon.ico", "destination": "/favicon.svg", "type": 301 }],
-    "rewrites": [{ "source": "**", "destination": "/_shell.html" }]
+    "rewrites": [
+      {
+        "source": "/mcp",
+        "function": { "functionId": "chatgptAdminMcp", "region": "us-central1" }
+      },
+      {
+        "source": "/mcp/**",
+        "function": { "functionId": "chatgptAdminMcp", "region": "us-central1" }
+      },
+      {
+        "source": "/.well-known/oauth-authorization-server",
+        "function": { "functionId": "profileAdminOAuth", "region": "us-central1" }
+      },
+      {
+        "source": "/.well-known/oauth-protected-resource/mcp",
+        "function": { "functionId": "profileAdminOAuth", "region": "us-central1" }
+      },
+      {
+        "source": "/authorize",
+        "function": { "functionId": "profileAdminOAuth", "region": "us-central1" }
+      },
+      {
+        "source": "/authorize/**",
+        "function": { "functionId": "profileAdminOAuth", "region": "us-central1" }
+      },
+      {
+        "source": "/token",
+        "function": { "functionId": "profileAdminOAuth", "region": "us-central1" }
+      },
+      {
+        "source": "/register",
+        "function": { "functionId": "profileAdminOAuth", "region": "us-central1" }
+      },
+      {
+        "source": "/revoke",
+        "function": { "functionId": "profileAdminOAuth", "region": "us-central1" }
+      },
+      { "source": "**", "destination": "/_shell.html" }
+    ]
   },
   "functions": {
     "source": "functions",

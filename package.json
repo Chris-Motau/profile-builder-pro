@@ -11,7 +11,7 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "functions:serve": "firebase emulators:start --only functions,firestore",
-    "functions:deploy": "firebase deploy --only functions:chatgptAdminMcp"
+    "functions:deploy": "firebase deploy --only functions:chatgptAdminMcp,functions:profileAdminOAuth,hosting"
   },
   "overrides": {
     "rolldown": "1.2.1"

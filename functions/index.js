@@ -1,14 +1,19 @@
-import { timingSafeEqual } from "node:crypto";
 import { initializeApp, getApps } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
 import { onRequest } from "firebase-functions/v2/https";
-import { defineSecret } from "firebase-functions/params";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { getOAuthProtectedResourceMetadataUrl } from "@modelcontextprotocol/sdk/server/auth/router.js";
+import { InvalidGrantError } from "@modelcontextprotocol/sdk/server/auth/errors.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { z } from "zod";
+import { FIREBASE_ADMIN_UID, verifyMcpAccessToken } from "./oauth-server.js";
 
-const API_KEY = defineSecret("CHATGPT_ADMIN_API_KEY");
+export { profileAdminOAuth } from "./oauth-server.js";
+
 const DATABASE_ID = "myprofilewebapp";
+const MCP_RESOURCE = new URL("https://c-motau-profile.web.app/mcp");
+const RESOURCE_METADATA_URL = getOAuthProtectedResourceMetadataUrl(MCP_RESOURCE);
+const ADMIN_SCOPE = "profile:admin";
 const ALLOWED_COLLECTIONS = new Set([
   "profile",
   "education",
@@ -22,15 +27,6 @@ const MAX_DOCUMENT_BYTES = 24 * 1024;
 
 if (getApps().length === 0) initializeApp();
 const db = getFirestore(undefined, DATABASE_ID);
-
-function authorized(req) {
-  const supplied = req.get("x-admin-api-key") || "";
-  const expected = API_KEY.value();
-  if (!supplied || !expected) return false;
-  const a = Buffer.from(supplied, "utf8");
-  const b = Buffer.from(expected, "utf8");
-  return a.length === b.length && timingSafeEqual(a, b);
-}
 
 function assertCollection(name) {
   if (!ALLOWED_COLLECTIONS.has(name)) {
@@ -196,14 +192,43 @@ function createServer() {
 export const chatgptAdminMcp = onRequest(
   {
     region: "us-central1",
-    secrets: [API_KEY],
+    secrets: [FIREBASE_ADMIN_UID],
     timeoutSeconds: 60,
     memory: "256MiB",
     cors: false,
   },
   async (req, res) => {
-    if (!authorized(req)) {
+    const bearer = /^Bearer\s+([^\s]+)$/i.exec(req.get("authorization") || "");
+    if (!bearer) {
+      res.set(
+        "WWW-Authenticate",
+        `Bearer resource_metadata="${RESOURCE_METADATA_URL}", scope="${ADMIN_SCOPE}"`,
+      );
       res.status(401).json({ error: "Unauthorized" });
+      return;
+    }
+    let authInfo;
+    try {
+      authInfo = await verifyMcpAccessToken(bearer[1]);
+    } catch (error) {
+      if (!(error instanceof InvalidGrantError)) {
+        console.error("OAuth access-token verification failed", error);
+        res.status(500).json({ error: "Authentication service unavailable" });
+        return;
+      }
+      res.set(
+        "WWW-Authenticate",
+        `Bearer resource_metadata="${RESOURCE_METADATA_URL}", scope="${ADMIN_SCOPE}"`,
+      );
+      res.status(401).json({ error: "Unauthorized" });
+      return;
+    }
+    if (!authInfo.scopes.includes(ADMIN_SCOPE) || authInfo.resource?.href !== MCP_RESOURCE.href) {
+      res.set(
+        "WWW-Authenticate",
+        `Bearer resource_metadata="${RESOURCE_METADATA_URL}", scope="${ADMIN_SCOPE}"`,
+      );
+      res.status(403).json({ error: "Insufficient scope" });
       return;
     }
     if (req.method !== "POST" && req.method !== "GET" && req.method !== "DELETE") {
