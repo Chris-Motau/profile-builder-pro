@@ -10,6 +10,7 @@ import { AppsSection } from "@/components/admin/AppsSection";
 import { ExperienceSection } from "@/components/admin/ExperienceSection";
 import { ProfileExtrasSection } from "@/components/admin/ProfileExtrasSection";
 import { AdminGate } from "@/components/admin/AdminGate";
+import { CvDownloadsSection } from "@/components/admin/CvDownloadsSection";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({
@@ -53,6 +54,7 @@ function AdminDashboard() {
           </p>
         )}
         <AdminGate>
+          <CvDownloadsSection />
           <BioSection />
           <EducationSection />
           <TechnicalSkillsSection />

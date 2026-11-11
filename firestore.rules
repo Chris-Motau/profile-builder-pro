@@ -43,6 +43,14 @@ service cloud.firestore {
       allow create, update, delete: if isAdmin();
     }
 
+    // Record only timestamped CV-link clicks; only the admin can read them.
+    match /cvDownloads/{downloadId} {
+      allow create: if request.resource.data.keys().hasAll(['createdAt']) &&
+        request.resource.data.keys().hasOnly(['createdAt']) &&
+        request.resource.data.createdAt == request.time;
+      allow read: if isAdmin();
+    }
+
     // No other client access is granted.
   }
 }

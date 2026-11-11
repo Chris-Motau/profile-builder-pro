@@ -24,7 +24,8 @@ import {
   VolumeX,
 } from "lucide-react";
 import { toast } from "sonner";
-import { firebaseReady } from "@/lib/firebase";
+import { firebaseReady, db } from "@/lib/firebase";
+import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { useCollectionData, useDocData, type UploadedFile } from "@/lib/admin-data";
 import { useTechnicalSkills } from "@/lib/technical-skills";
 import { Badge } from "@/components/ui/badge";
@@ -390,7 +391,12 @@ function PublicProfile() {
                     href={extras.data.cv.url}
                     target="_blank"
                     rel="noreferrer"
-                    onClick={() => window.__lovableEvents?.track?.("project.cv_downloaded")}
+                    onClick={() => {
+                      window.__lovableEvents?.track?.("project.cv_downloaded");
+                      void addDoc(collection(db, "cvDownloads"), {
+                        createdAt: serverTimestamp(),
+                      }).catch(() => undefined);
+                    }}
                     className="inline-flex items-center gap-2 rounded-lg bg-white px-4 py-2 text-sm font-medium text-slate-900 transition-colors hover:bg-teal-100"
                   >
                     <Download className="size-4" /> Download CV
