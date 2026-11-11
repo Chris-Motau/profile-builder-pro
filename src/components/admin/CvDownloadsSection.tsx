@@ -48,7 +48,7 @@ export function CvDownloadsSection() {
       (snapshot) => {
         setDownloadDates(
           snapshot.docs
-            .map((download) => download.data().createdAt)
+            .map((download) => download.data()["createdAt"])
             .filter((date): date is Timestamp => date instanceof Timestamp),
         );
         setUnavailable(false);
@@ -75,12 +75,12 @@ export function CvDownloadsSection() {
 
     return months.map((month) => ({
       month: month.toLocaleDateString(undefined, { month: "short", year: "2-digit" }),
-      clicks: counts.get(`${month.getFullYear()}-${month.getMonth()}`) ?? 0,
+      downloads: counts.get(`${month.getFullYear()}-${month.getMonth()}`) ?? 0,
     }));
   }, [downloadDates, months]);
 
-  const totalClicks = chartData.reduce((total, month) => total + month.clicks, 0);
-  const currentMonthClicks = chartData.at(-1)?.clicks ?? 0;
+  const totalClicks = chartData.reduce((total, month) => total + month.downloads, 0);
+  const currentMonthClicks = chartData.at(-1)?.downloads ?? 0;
 
   return (
     <SectionShell
@@ -123,7 +123,7 @@ export function CvDownloadsSection() {
                 width={32}
               />
               <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
-              <Bar dataKey="clicks" fill="var(--color-downloads)" radius={[3, 3, 0, 0]} />
+              <Bar dataKey="downloads" fill="var(--color-downloads)" radius={[3, 3, 0, 0]} />
             </BarChart>
           </ChartContainer>
           <p className="text-xs text-muted-foreground">Counts are link clicks, not unique visitors or confirmed file opens.</p>
