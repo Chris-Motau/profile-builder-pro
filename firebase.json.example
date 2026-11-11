@@ -1,0 +1,19 @@
+{
+  "firestore": {
+    "database": "myprofilewebapp",
+    "rules": "firestore.rules"
+  },
+  "storage": {
+    "rules": "storage.rules"
+  },
+  "hosting": {
+    "public": ".output/public",
+    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+    "redirects": [{ "source": "/favicon.ico", "destination": "/favicon.svg", "type": 301 }],
+    "rewrites": [{ "source": "**", "destination": "/_shell.html" }]
+  },
+  "functions": {
+    "source": "functions",
+    "codebase": "default"
+  }
+}
