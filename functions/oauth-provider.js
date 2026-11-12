@@ -9,6 +9,7 @@ const CODE_TTL_MS = 5 * 60 * 1000;
 const ACCESS_TOKEN_TTL_MS = 15 * 60 * 1000;
 const REFRESH_TOKEN_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 const ADMIN_SCOPE = "profile:admin";
+const REFRESH_SCOPE = "offline_access";
 
 function hash(value) {
   return createHash("sha256").update(value).digest("hex");
@@ -151,8 +152,13 @@ export function createFirebaseOAuthProvider({
       if (params.resource?.href !== resource) {
         throw new InvalidRequestError("The OAuth resource must identify this MCP server.");
       }
-      const scopes = params.scopes?.length ? params.scopes : [ADMIN_SCOPE];
-      if (scopes.length !== 1 || scopes[0] !== ADMIN_SCOPE) {
+      const scopes = params.scopes?.length
+        ? [...new Set(params.scopes)]
+        : [ADMIN_SCOPE];
+      if (
+        !scopes.includes(ADMIN_SCOPE) ||
+        scopes.some((scope) => scope !== ADMIN_SCOPE && scope !== REFRESH_SCOPE)
+      ) {
         throw new InvalidRequestError("Unsupported OAuth scope.");
       }
 

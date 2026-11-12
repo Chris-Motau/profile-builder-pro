@@ -102,7 +102,7 @@ test("OAuth code, refresh rotation, revocation, and admin binding", async () => 
   });
   const params = {
     state: "random-state",
-    scopes: ["profile:admin"],
+    scopes: ["profile:admin", "offline_access"],
     codeChallenge: "test-code-challenge",
     redirectUri: client.redirect_uris[0],
     resource: new URL("https://c-motau-profile.web.app/mcp"),
@@ -131,7 +131,7 @@ test("OAuth code, refresh rotation, revocation, and admin binding", async () => 
     params.redirectUri,
     params.resource,
   );
-  assert.equal(first.scope, "profile:admin");
+  assert.equal(first.scope, "profile:admin offline_access");
   assert.equal((await provider.verifyAccessToken(first.access_token)).extra.uid, "admin-uid");
   await assert.rejects(
     provider.exchangeAuthorizationCode(

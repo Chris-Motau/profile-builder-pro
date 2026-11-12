@@ -18,6 +18,7 @@ const SITE_ORIGIN = new URL("https://c-motau-profile.web.app");
 const MCP_RESOURCE = new URL("/mcp", SITE_ORIGIN);
 const AUTHORIZE_COMPLETION = new URL("/authorize/complete", SITE_ORIGIN).href;
 const ADMIN_SCOPE = "profile:admin";
+const REFRESH_SCOPE = "offline_access";
 if (getApps().length === 0) initializeApp();
 const db = getFirestore(undefined, DATABASE_ID);
 
@@ -44,7 +45,7 @@ const provider = createFirebaseOAuthProvider({
 const oauthMetadata = createOAuthMetadata({
   provider,
   issuerUrl: SITE_ORIGIN,
-  scopesSupported: [ADMIN_SCOPE],
+  scopesSupported: [ADMIN_SCOPE, REFRESH_SCOPE],
 });
 oauthMetadata.revocation_endpoint_auth_methods_supported = ["none"];
 
@@ -57,7 +58,7 @@ app.get("/.well-known/oauth-protected-resource/mcp", (req, res) => {
   res.json({
     resource: MCP_RESOURCE.href,
     authorization_servers: [SITE_ORIGIN.href],
-    scopes_supported: [ADMIN_SCOPE],
+    scopes_supported: [ADMIN_SCOPE, REFRESH_SCOPE],
     resource_name: "Profile Admin MCP",
     resource_documentation: SITE_ORIGIN.href,
   });
@@ -82,7 +83,7 @@ app.use(
     issuerUrl: SITE_ORIGIN,
     resourceServerUrl: MCP_RESOURCE,
     resourceName: "Profile Admin MCP",
-    scopesSupported: [ADMIN_SCOPE],
+    scopesSupported: [ADMIN_SCOPE, REFRESH_SCOPE],
     serviceDocumentationUrl: SITE_ORIGIN,
   }),
 );
